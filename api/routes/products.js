@@ -1,21 +1,58 @@
 const express = require('express')
+const mongoose = require('mongoose')
 const router = express.Router()
 
+const Product = require('../models/products')
+
+
 router.get('/', (req,res,next)=>{
-    res.status(200).json({
-        message:"GET Request to /products processing...."
+    Product.find()
+    .exec()
+    .then(docs =>{
+     if(docs){
+        res.status(200).json(docs)
+     }else{
+        res.status(404).json({
+            message:"No entry for provided ID."
+        })
+     }
     })
-})
-router.get('/:productId', (req,res,next)=>{
-   const Id = req.params.productId
-   res.status(200).json({
-    message:`GET Request to /products/${Id} processing....`
-})
 })
 router.post('/', (req,res,next)=>{
-    res.status(200).json({
-        message:"POST Request to /products processing...."
+    const product = new Product({
+        _id: new mongoose.Types.ObjectId,
+        product: req.body.product,
+        quantity:req.body.quantity,
+        price:req.body.price
     })
+    product.save().then(result =>{
+        res.status(201).json({
+            result
+        })
+    }).catch(error =>{
+        console.log(error)
+    })
+    
 })
+router.get('/:productId', (req,res,next)=>{
+    const id = req.params.productId
+    Product.findById(id)
+    .exec()
+    .then(docs =>{
+     if(docs){
+        res.status(200).json(docs)
+     }else{
+        res.status(404).json({
+            message:"No entry for provided ID."
+        })
+     }
+    })
+    .catch(err =>{
+     res.status(500).json({
+         status: 500,
+         error: err
+     })
+    })
+ })
 
 module.exports = router;
